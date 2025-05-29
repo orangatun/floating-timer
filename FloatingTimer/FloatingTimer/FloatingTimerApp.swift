@@ -36,13 +36,15 @@ struct TimerView: View {
     
     var body: some View {
         VStack {
-            Button(action: toggleMode, label: {
-                if(timerMode == .countup) {
-                    Image(systemName: "timer")
-                } else {
-                    Image(systemName: "stopwatch")
-                }
-            })
+            if(timerState == .reset) {
+                Button(action: toggleMode, label: {
+                    if(timerMode == .countup) {
+                        Image(systemName: "timer")
+                    } else {
+                        Image(systemName: "stopwatch")
+                    }
+                })
+            }
             HStack {
                 Text(String(format: "%02d", hours))
                 Text(":")
