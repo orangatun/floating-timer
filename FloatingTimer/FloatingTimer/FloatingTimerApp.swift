@@ -82,6 +82,19 @@ struct TimerView: View {
             cancellable?.cancel()
             cancellable = nil
             timerState = .reset
+            resetClock()
+        }
+    }
+    
+    func resetClock() {
+        if(timerMode == .countdown) {
+            hours = setHours
+            minutes = setMinutes
+            seconds = setSeconds
+        } else {
+            hours = 0
+            minutes = 0
+            seconds = 0
         }
     }
     
