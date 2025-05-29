@@ -18,17 +18,30 @@ struct FloatingOverlayApp: App {
 }
 
 
+import Combine
+
 struct TimerView: View {
-    @State var timerMode: TimerMode = .countdown
+    @State var timerMode: TimerMode = .countup
     @State var timerState: TimerState = .reset
+    
+    @State var setHours: UInt8 = 0
+    @State var setMinutes: UInt8 = 0
+    @State var setSeconds: UInt8 = 0
+    
+    @State var hours: UInt8 = 0
+    @State var minutes: UInt8 = 0
+    @State var seconds: UInt8 = 0
+    
+    @State var cancellable: AnyCancellable?
+    
     var body: some View {
         VStack {
             HStack {
-                Text("00")
+                Text(String(format: "%02d", hours))
                 Text(":")
-                Text("00")
+                Text(String(format: "%02d", minutes))
                 Text(":")
-                Text("00")
+                Text(String(format: "%02d", seconds))
             }
             HStack {
                 if(timerState == .running) {
@@ -54,21 +67,54 @@ struct TimerView: View {
         
     func toggleState() {
         if(timerState == .reset || timerState == .paused) {
+            cancellable = Timer.publish(every: 1, on: .main, in: .common).autoconnect().sink { _ in
+                incrementSeconds()
+            }
             timerState = .running
         } else {
+            cancellable?.cancel()
+            cancellable = nil
             timerState = .reset
         }
     }
     
     func pauseClock() {
+        cancellable?.cancel()
+        cancellable = nil
         timerState = .paused
     }
     
     func toggleMode() {
         if(timerMode == .countdown) {
-            timerMode = .stopwatch
+            timerMode = .countup
         } else {
             timerMode = .countdown
+        }
+    }
+    
+    func incrementSeconds() {
+        if(seconds == 59) {
+            incrementMinutes()
+            seconds = 0
+        } else {
+            seconds += 1
+        }
+    }
+    
+    func incrementMinutes() {
+        if(minutes == 59) {
+            incrementHours()
+            minutes = 0
+        } else {
+            minutes += 1
+        }
+    }
+    
+    func incrementHours() {
+        if(hours == 255) {
+            hours = 0
+        } else {
+            hours += 1
         }
     }
 }
@@ -76,7 +122,7 @@ struct TimerView: View {
 
 enum TimerMode {
     case countdown
-    case stopwatch
+    case countup
 }
 
 enum TimerState {
