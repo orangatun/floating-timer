@@ -55,14 +55,16 @@ struct TimerView: View {
                     Button(action: pauseClock, label: {
                         Image(systemName: "pause.fill")
                     })
-                }
-                Button(action: toggleState, label: {
-                    if(timerState != .running) {
+                } else {
+                    Button(action: toggleState, label: {
                         Image(systemName: "play.fill")
-                    } else {
+                    })
+                }
+                if(timerState == .paused || timerState == .running) {
+                    Button(action: resetClock, label: {
                         Image(systemName: "stop.fill")
-                    }
-                })
+                    })
+                }
             }
             HStack {
                 Text("Mode: \(timerMode)")
@@ -87,6 +89,7 @@ struct TimerView: View {
     }
     
     func resetClock() {
+        timerState = .reset
         if(timerMode == .countdown) {
             hours = setHours
             minutes = setMinutes
