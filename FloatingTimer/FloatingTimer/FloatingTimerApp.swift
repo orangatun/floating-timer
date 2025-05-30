@@ -28,6 +28,7 @@ struct TimerView: View {
     @State var setMinutes: UInt8 = 0
     @State var setSeconds: UInt8 = 0
     
+    @State var fontSize = CGFloat(24)
     @State var hours: UInt8 = 0
     @State var minutes: UInt8 = 0
     @State var seconds: UInt8 = 0
@@ -46,11 +47,19 @@ struct TimerView: View {
                 })
             }
             HStack {
-                Text(String(format: "%02d", hours))
-                Text(":")
-                Text(String(format: "%02d", minutes))
-                Text(":")
-                Text(String(format: "%02d", seconds))
+                if(timerMode == .countdown && timerState == .reset) {
+                    TimePickerView(setTimeUnit: $setHours, limit: 23, fontSize: $fontSize)
+                    Text(":")
+                    TimePickerView(setTimeUnit: $setMinutes, limit: 60, fontSize: $fontSize)
+                    Text(":")
+                    TimePickerView(setTimeUnit: $setSeconds, limit: 60, fontSize: $fontSize)
+                } else {
+                    Text(String(format: "%02d", hours))
+                    Text(":")
+                    Text(String(format: "%02d", minutes))
+                    Text(":")
+                    Text(String(format: "%02d", seconds))
+                }
             }
             HStack {
                 if(timerState == .running) {
@@ -73,13 +82,22 @@ struct TimerView: View {
                 Text("State: \(timerState)")
             }
         }
-            .frame(minWidth: 300, minHeight: 200, alignment: .center)
+        .frame(minWidth: 300, minHeight: 200, alignment: .center)
     }
         
     func toggleState() {
         if(timerState == .reset || timerState == .paused) {
+            if(timerState == .reset && timerMode == .countdown) {
+                hours = setHours
+                minutes = setMinutes
+                seconds = setSeconds
+            }
             cancellable = Timer.publish(every: 1, on: .main, in: .common).autoconnect().sink { _ in
-                incrementSeconds()
+                if(timerMode == .countup) {
+                    incrementSeconds()
+                } else {
+                    decrementSeconds()
+                }
             }
             timerState = .running
         } else {
@@ -91,6 +109,8 @@ struct TimerView: View {
     }
     
     func resetClock() {
+        cancellable?.cancel()
+        cancellable = nil
         timerState = .reset
         if(timerMode == .countdown) {
             hours = setHours
@@ -115,6 +135,7 @@ struct TimerView: View {
         } else {
             timerMode = .countdown
         }
+        resetClock()
     }
     
     func incrementSeconds() {
@@ -136,14 +157,60 @@ struct TimerView: View {
     }
     
     func incrementHours() {
-        if(hours == 255) {
+        if(hours == 23) {
             hours = 0
         } else {
             hours += 1
         }
     }
+    
+    func decrementSeconds() {
+        if(seconds == 0) {
+            decrementMinutes()
+            seconds = 59
+        } else {
+            seconds -= 1
+        }
+    }
+    
+    func decrementMinutes() {
+        if(minutes == 0) {
+            decrementHours()
+            minutes = 59
+        } else {
+            minutes -= 1
+        }
+    }
+    
+    func decrementHours() {
+        if(hours == 0) {
+            resetClock()
+            // Handle a case of Timer end view using a flag
+        } else {
+            hours -= 1
+        }
+    }
 }
 
+
+struct TimePickerView: View {
+    @Binding var setTimeUnit: UInt8
+    let limit: UInt8
+    @Binding var fontSize: CGFloat
+    var body: some View {
+        Picker("", selection: $setTimeUnit) {
+            ForEach(Array<UInt8>(0...limit), id: \.self) { number in
+                Text(String(format:"%02d", number))
+                    .tag(number)
+            }
+        }
+        .buttonStyle(.plain)
+        .labelsHidden()
+        .frame(width: fontSize)
+        .scaledToFit()
+        .pickerStyle(.automatic)
+    }
+}
 
 enum TimerMode {
     case countdown
