@@ -60,7 +60,7 @@ struct TimerView: View {
                     Text(":")
                     Text(String(format: "%02d", seconds))
                 }
-            }
+            }.font(.system(size: fontSize))
             HStack {
                 if(timerState == .running) {
                     Button(action: pauseClock, label: {
@@ -77,11 +77,21 @@ struct TimerView: View {
                     })
                 }
             }
-            HStack {
-                Text("Mode: \(timerMode)")
-                Text("State: \(timerState)")
+            Picker("", selection: $fontSize) {
+                ForEach(Array<CGFloat>(stride(from: 16, through: 128, by: 8)), id: \.self) { number in
+                    Text(String(format:"%.0f", number))
+                        .font(.system(size: fontSize))
+                        .tag(number)
+
+                }
             }
+            .font(.system(size: fontSize))
+            .buttonStyle(.plain)
+            .labelsHidden()
+            .fixedSize(horizontal: true, vertical: false)
+            .pickerStyle(.automatic)
         }
+        .font(.system(size: fontSize/2))
         .frame(minWidth: 300, minHeight: 200, alignment: .center)
     }
         
@@ -201,15 +211,24 @@ struct TimePickerView: View {
         Picker("", selection: $setTimeUnit) {
             ForEach(Array<UInt8>(0...limit), id: \.self) { number in
                 Text(String(format:"%02d", number))
+                    .font(.system(size: fontSize))
                     .tag(number)
+                    .padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+
             }
         }
+        .padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+        .font(.system(size: fontSize))
         .buttonStyle(.plain)
         .labelsHidden()
-        .frame(width: fontSize)
+        .fixedSize(horizontal: true, vertical: false)
         .scaledToFit()
         .pickerStyle(.automatic)
+        .padding(.horizontal, -3) //To remove the extra padding from Picker View
+        .padding(.vertical, -3) //To align it with the default Text View
+        .menuIndicator(.hidden)
     }
+    
 }
 
 enum TimerMode {
@@ -225,4 +244,5 @@ enum TimerState {
 
 #Preview {
     TimerView()
+//    TimePickerView(setTimeUnit: .constant(32), limit: 32, fontSize: .constant(24))
 }
